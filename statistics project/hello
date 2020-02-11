@@ -1,0 +1,971 @@
+from tkinter import *
+from numpy import median, mean
+import pandas as pd
+import tkinter
+import matplotlib.pyplot as plt
+from tkinter import IntVar
+from sklearn.linear_model import LinearRegression
+import statistics
+
+window = Tk()
+colnames = ['District Number','District','School','Test-takers: 2012','Test-takers: 2013','Test-takers: Change%',
+            'Participation Rate (estimate): 2012','Participation Rate (estimate): 2013','Participati']
+window.title('Application Statistcs')
+#ourdata
+df = pd.DataFrame()
+diamond_data = pd.read_csv('diamonds.csv')
+data = pd.read_csv('students.csv')
+openFrame = 0
+
+
+def closeFrames():
+    if openFrame == 1:
+        corrFrame.grid_forget()
+    elif openFrame == 2:
+        regFrame.grid_forget()
+    elif openFrame == 3 :
+        MeanFrame.grid_forget()
+    elif openFrame == 4:
+        MedianFrame.grid_forget()
+    elif openFrame == 5:
+        ModeFrame.grid_forget()
+    elif openFrame == 6:
+        StdFrame.grid_forget()
+    elif openFrame == 7:
+        VarFrame.grid_forget()
+    elif openFrame == 8:
+        barFrame.grid_forget()
+    elif openFrame == 9:
+        scatterFrame.grid_forget()
+    elif openFrame == 10:
+        rangeFrame.grid_forget()
+    return
+
+
+#IQR and range Frame#####################################################################3<<<<<<<<<<<<<<<<<
+rangeFrame = Frame(window)
+rangeFrame.columnconfigure(0, weight=1)
+rangeFrame.rowconfigure(0, weight=1)
+
+
+def Median(list, l, r):
+
+    n = r - l + 1
+    n = (n + 1) // 2-1
+    return n + l
+
+
+def IQR():
+    result_str = StringVar()
+    result_str.set('')
+
+    dfSortedbyAcol = data.sort_values(by=SetNamecol())
+    colChosen = Setcol(dfSortedbyAcol)
+    list = colChosen
+    list = list.tolist()
+    print(list)
+
+    n = len(list)
+
+    mid_index = Median(list,  0, n)
+
+    Q1 = list[Median(list, 0, mid_index)]
+
+    Q3 = list[Median(list, mid_index + 1, n)]
+
+    Result = Label(rangeFrame, textvariable=result_str).grid(row=13, column=1)
+    result_str.set(str(int(Q3)-int(Q1)))
+    Result_LBL = Label(rangeFrame, text="The Result is:").grid(row=13, sticky=W)
+
+
+def Range():
+    result_str = StringVar()
+    result_str.set('')
+
+    dfSorted = data.sort_values(by=SetNamecol())
+    colChosen = Setcol(dfSorted)
+    list = colChosen
+    list = list.tolist()
+    min_val = min(list)
+    max_val = max(list)
+    Result = Label(rangeFrame, textvariable=result_str).grid(row=12, column=1)
+    result_str.set("["+str(min_val)+","+ str(max_val)+"]")
+    Result_LBL = Label(rangeFrame, text="The Result is:").grid(row=12, sticky=W)
+
+
+label = Label(rangeFrame, text="Choose column :").grid(row=0, sticky=W)
+
+
+var1ran = IntVar()
+c = Checkbutton(rangeFrame, text="District Number", variable=var1ran).grid(row=1, sticky=W)
+var2ran = IntVar()
+c = Checkbutton(rangeFrame, text="Test-takers: 2012", variable=var2ran).grid(row=2, sticky=W)
+var3ran = IntVar()
+c = Checkbutton(rangeFrame, text="Test-takers: 2013", variable=var3ran).grid(row=3, sticky=W)
+var4ran = IntVar()
+c = Checkbutton(rangeFrame, text="Test-takers: Change%", variable=var4ran).grid(row=4, sticky=W)
+var5ran = IntVar()
+c =Checkbutton(rangeFrame, text="Participation Rate (estimate): 2012", variable=var5ran).grid(row=5, sticky=W)
+var6ran = IntVar()
+c =Checkbutton(rangeFrame, text="Participation Rate (estimate): 2013", variable=var6ran).grid(row=6, sticky=W)
+var7ran = IntVar()
+c =Checkbutton(rangeFrame, text="Participation Rate (estimate): Change%", variable=var7ran).grid(row=7, sticky=W)
+var8ran = IntVar()
+c =Checkbutton(rangeFrame, text="Percent Meeting Benchmark: 2012", variable=var8ran).grid(row=8, sticky=W)
+var9ran = IntVar()
+c =Checkbutton(rangeFrame,text="Percent Meeting Benchmark: Change%", variable=var9ran).grid(row=9, sticky=W)
+
+
+def Setcol(defpassed):
+    global col
+    if var1ran.get() == 1:
+        col = defpassed['District Number']
+    elif var2ran.get() == 1:
+        col = defpassed['Test-takers: 2012']
+    elif var3ran.get() == 1:
+        col = defpassed['Test-takers: 2013']
+    elif var4ran.get() == 1:
+        col = defpassed['Test-takers: Change%']
+    elif var5ran.get() == 1:
+        col = defpassed['Participation Rate (estimate): 2012']
+    elif var6ran.get() == 1:
+        col = defpassed['Participation Rate (estimate): 2013']
+    elif var7ran.get() == 1:
+        col= defpassed['Participation Rate (estimate): Change%']
+    elif var8ran.get() == 1:
+        col = defpassed['Percent Meeting Benchmark: 2012']
+    elif var9ran.get() == 1:
+        col = defpassed['Percent Meeting Benchmark: Change%']
+    return col
+
+
+def SetNamecol():
+    global namecol
+    if var1ran.get() == 1:
+        namecol = 'District Number'
+    elif var2ran.get() == 1:
+        namecol = 'Test-takers: 2012'
+    elif var3ran.get() == 1:
+        namecol = 'Test-takers: 2013'
+    elif var4ran.get() == 1:
+        namecol = 'Test-takers: Change%'
+    elif var5ran.get() == 1:
+        namecol = 'Participation Rate (estimate): 2012'
+    elif var6ran.get() == 1:
+        namecol = 'Participation Rate (estimate): 2013'
+    elif var7ran.get() == 1:
+        namecol= 'Participation Rate (estimate): Change%'
+    elif var8ran.get() == 1:
+        namecol = 'Percent Meeting Benchmark: 2012'
+    elif var9ran.get() == 1:
+        namecol = 'Percent Meeting Benchmark: Change%'
+
+    return namecol
+
+
+IQR_button = Button(rangeFrame, text="calculate IQR", bg="blue", command=IQR)
+RANGE_button2 = Button(rangeFrame, text="calculate Range", bg="purple", command=Range)
+
+IQR_button.grid(row=10, sticky=W)
+RANGE_button2.grid(row=11, sticky=W)
+
+
+#correlaton Frame##########################################################################<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<,
+corrFrame = Frame(window)
+corrFrame.columnconfigure(0, weight=1)
+corrFrame.rowconfigure(0, weight=1)
+
+varsLabel = Label(corrFrame, text="Dataset Variables:\n carat, depth, table, price, x, y, z\n")\
+             .grid(row=0, sticky=(E, N))
+va1Label = Label(corrFrame, text="variable 1").grid(row=2)
+var1rEntry = Entry(corrFrame)
+var1rEntry.grid(row=3)
+va2Label = Label(corrFrame, text="variable 2").grid(row=4)
+var2rEntry = Entry(corrFrame)
+var2rEntry.grid(row=5)
+pearsonResult = Label(corrFrame, text="--")
+pearsonResult.grid(row=7, column=0)
+relationLabel = Label(corrFrame, text="Type of relation").grid(row=8)
+relationResult = Label(corrFrame, text="--")
+relationResult.grid(row=9, column=0, pady=10)
+#caculateR
+def calculateR(event):
+    v1r = var1rEntry.get()
+    v2r = var2rEntry.get()
+    if v1r != '' and v2r != '':
+        r = diamond_data[v1r].corr(diamond_data[v2r])
+        pearsonResult.config(text=r)
+        if r > 0:
+            sign = "Direct"
+        else:
+            sign = "Inverse"
+        if r == 1 or r == -1:
+            strength = 'Perfect'
+        elif (0.65 <= r < 1) or (-0.65 >= r > -1):
+            strength = 'Strong'
+        elif (0.35 <= r <= 0.64) or (-0.35 >= r >= -0.64):
+            strength = 'Moderate'
+        elif (0.05 <= r <= 0.34) or (-0.05 >= r >= -0.34):
+            strength = 'Weak'
+        else:
+            strength = 'No correlation'
+            sign = ''
+        relationResult.config(text=strength + ', ' + sign)
+    return
+
+
+calculateRButton = Button(corrFrame, text="Calculate pearson's R")
+calculateRButton.grid(row=6, column=0, pady=10)
+calculateRButton.bind("<Button-1>", calculateR)
+
+#regression Frame######################################################################<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+regFrame = Frame(window)
+regFrame.columnconfigure(0, weight=1)
+regFrame.rowconfigure(0, weight=1)
+
+varsLabel = Label(regFrame, text="Dataset Variables:\n carat, depth, table, price, x, y, z\n")\
+            .grid(row=0, sticky=(E, N))
+
+va1Label = Label(regFrame, text="variable 1").grid(row=1)
+var1Entry = Entry(regFrame)
+var1Entry.grid(row=2)
+
+va2Label = Label(regFrame, text="variable 2").grid(row=3)
+var2Entry = Entry(regFrame)
+var2Entry.grid(row=4)
+calculateRegButton = Button(regFrame, text="Calculate regression")
+calculateRegButton.grid(row=5, column=0, pady=10)
+
+
+def calculateRegression(event):
+    v1g = var1Entry.get()
+    v2g = var2Entry.get()
+    x = pd.DataFrame(diamond_data[v1g])
+    y = pd.DataFrame(diamond_data[v2g])
+    model = LinearRegression().fit(x, y)
+    detResult.config(text=model.score(x, y))
+    interceptResult.config(text=model.intercept_)
+    slopeResult.config(text=model.coef_)
+    return
+detLabel = Label(regFrame, text="Determination coef.").grid(row=6)
+detResult = Label(regFrame, text="--")
+detResult.grid(row=7, column=0)
+
+interceptLabel = Label(regFrame, text="Intercept").grid(row=8)
+interceptResult = Label(regFrame, text="--")
+interceptResult.grid(row=9, column=0, pady=10)
+
+slopeLabel = Label(regFrame, text="Slope").grid(row=10)
+slopeResult = Label(regFrame, text="--")
+slopeResult.grid(row=11, column=0, pady=10)
+calculateRegButton.bind("<Button-1>", calculateRegression)
+
+#mean Frame#######################################################<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+MeanFrame = Frame(window)
+MeanFrame.columnconfigure(0, weight=1)
+MeanFrame.rowconfigure(0, weight=1)
+varsLabel = Label(MeanFrame, text="Choose Single Column From  Below :\n")\
+            .grid(row=0, sticky=(E, N))
+
+var1mean = tkinter.IntVar()
+tkinter.Checkbutton(MeanFrame, text="District Number", variable=var1mean).grid(row=1,column=0)
+var2mean = tkinter.IntVar()
+tkinter.Checkbutton(MeanFrame, text="Test-takers: 2012", variable=var2mean).grid(row=2,column=0)
+var3mean = tkinter.IntVar()
+tkinter.Checkbutton(MeanFrame, text="Test-takers: 2013", variable=var3mean).grid(row=3,column=0)
+var4mean = tkinter.IntVar()
+tkinter.Checkbutton(MeanFrame, text="Test-takers: Change%", variable=var4mean).grid(row=4,column=0)
+var5mean = tkinter.IntVar()
+tkinter.Checkbutton(MeanFrame, text="Participation Rate (estimate): 2012", variable=var5mean).grid(row=5,column=0)
+var6mean = tkinter.IntVar()
+tkinter.Checkbutton(MeanFrame, text="Participation Rate (estimate): 2013", variable=var6mean).grid(row=6,column=0)
+var7mean = tkinter.IntVar()
+tkinter.Checkbutton(MeanFrame, text="Participation Rate (estimate): Change%", variable=var7mean).grid(row=7,column=0)
+var8mean = tkinter.IntVar()
+tkinter.Checkbutton(MeanFrame, text="Percent Meeting Benchmark: 2012", variable=var8mean).grid(row=8, column=0)
+var9mean = tkinter.IntVar()
+tkinter.Checkbutton(MeanFrame, text="Percent Meeting Benchmark: Change%", variable=var9mean).grid(row=9, column=0)
+
+labelshowMeanRe = Label(MeanFrame, text="result").grid(row=11, column=0)
+labelshowMean = Label(MeanFrame, text="--")
+labelshowMean.grid(row=12)
+calculateMeanButton = Button(MeanFrame, text="Calculate Mean")
+calculateMeanButton.grid(row=10, column=0, pady=10)
+
+MeanOperation = 0
+def showMean(event):
+    returnvalue = checkWhichcol()
+    MeanOperation = mean(returnvalue)
+    labelshowMean.config(text=MeanOperation)
+    return
+
+calculateMeanButton.bind("<Button-1>", showMean)
+
+
+#median frame#####################################################<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+MedianFrame = Frame(window)
+MedianFrame.columnconfigure(0, weight=1)
+MedianFrame.rowconfigure(0, weight=1)
+medButton = Button(MedianFrame, text="Calculate Median")
+medButton.grid(row=10, column=0, pady=10)
+
+varsLabel = Label(MedianFrame, text="Choose Single Column From  Below :\n")\
+            .grid(row=0, sticky=(E, N),pady=10)
+var1med = tkinter.IntVar()
+tkinter.Checkbutton(MedianFrame, text="District Number", variable=var1med).grid(row=1,column=0)
+var2med = tkinter.IntVar()
+tkinter.Checkbutton(MedianFrame, text="Test-takers: 2012", variable=var2med).grid(row=2,column=0)
+var3med = tkinter.IntVar()
+tkinter.Checkbutton(MedianFrame, text="Test-takers: 2013", variable=var3med).grid(row=3,column=0)
+var4med = tkinter.IntVar()
+tkinter.Checkbutton(MedianFrame, text="Test-takers: Change%", variable=var4med).grid(row=4,column=0)
+var5med = tkinter.IntVar()
+tkinter.Checkbutton(MedianFrame, text="Participation Rate (estimate): 2012", variable=var5med).grid(row=5,column=0)
+var6med = tkinter.IntVar()
+tkinter.Checkbutton(MedianFrame, text="Participation Rate (estimate): 2013", variable=var6med).grid(row=6,column=0)
+var7med = tkinter.IntVar()
+tkinter.Checkbutton(MedianFrame, text="Participation Rate (estimate): Change%", variable=var7med).grid(row=7,column=0)
+var8med = tkinter.IntVar()
+tkinter.Checkbutton(MedianFrame, text="Percent Meeting Benchmark: 2012", variable=var8med).grid(row=8, column=0)
+var9med = tkinter.IntVar()
+tkinter.Checkbutton(MedianFrame, text="Percent Meeting Benchmark: Change%", variable=var9med).grid(row=9, column=0)
+
+def ShowMedian(event):
+    returnvalue = checkWhichcol()
+    MedianOperation = median(returnvalue)
+    labelshowMadium = Label(MedianFrame, text=MedianOperation).grid()
+
+
+medButton.bind("<Button-1>", ShowMedian)
+#MODE FRAME#################################################################
+ModeFrame = Frame(window)
+ModeFrame.columnconfigure(0, weight=1)
+ModeFrame.rowconfigure(0, weight=1)
+
+
+stdButton = Button(ModeFrame, text="Calculate Mode")
+stdButton.grid(row=0, column=0, pady=10)
+
+def ShowMode(event):
+    ModeOperation = data.mode( dropna=True)
+    labelshowMode = Label(ModeFrame, text=ModeOperation).grid(row=0)
+
+stdButton.bind("<Button-1>", ShowMode)
+#STD FRAME#######################################################<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+StdFrame = Frame(window)
+StdFrame.columnconfigure(0, weight=1)
+StdFrame.rowconfigure(0, weight=1)
+
+stdButton = Button(StdFrame, text="Calculate standard deviation")
+stdButton.grid(row=0, column=0, pady=10)
+
+def show_std(event):
+    valueOfStd = data.std()
+    showStdLabel = Label(StdFrame, text=valueOfStd).grid(row=0, padx=10)
+
+stdButton.bind("<Button-1>", show_std)
+
+#VAR FRAME######################################################<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+VarFrame = Frame(window)
+VarFrame.columnconfigure(0, weight=1)
+VarFrame.rowconfigure(0, weight=1)
+
+varButton = Button(VarFrame, text="Calculate Variance")
+varButton.grid(row=0, column=0, pady=10)
+
+def show_var(event):
+    valueOfvar = data.var()
+    showvarLabel = Label(VarFrame, text=valueOfvar).grid(row=0, pady=10)
+
+varButton.bind("<Button-1>", show_var)
+#bar chart frame######################################################<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+barFrame = Frame(window)
+barFrame.columnconfigure(0, weight=1)
+barFrame.rowconfigure(0, weight=1)
+varsLabel = Label(barFrame, text="Choose Two Columns From  Below :\n")\
+            .grid(row=0, sticky=(E, N))
+
+var1bar = tkinter.IntVar()
+tkinter.Checkbutton(barFrame, text="District Number", variable=var1bar).grid(row=1,column=0)
+var2bar = tkinter.IntVar()
+tkinter.Checkbutton(barFrame, text="Test-takers: 2012", variable=var2bar).grid(row=2,column=0)
+var3bar = tkinter.IntVar()
+tkinter.Checkbutton(barFrame, text="Test-takers: 2013", variable=var3bar).grid(row=3,column=0)
+var4bar = tkinter.IntVar()
+tkinter.Checkbutton(barFrame, text="Test-takers: Change%", variable=var4bar).grid(row=4,column=0)
+var5bar = tkinter.IntVar()
+tkinter.Checkbutton(barFrame, text="Participation Rate (estimate): 2012", variable=var5bar).grid(row=5,column=0)
+var6bar = tkinter.IntVar()
+tkinter.Checkbutton(barFrame, text="Participation Rate (estimate): 2013", variable=var6bar).grid(row=6,column=0)
+var7bar = tkinter.IntVar()
+tkinter.Checkbutton(barFrame, text="Participation Rate (estimate): Change%", variable=var7bar).grid(row=7,column=0)
+var8bar = tkinter.IntVar()
+tkinter.Checkbutton(barFrame, text="Percent Meeting Benchmark: 2012", variable=var8bar).grid(row=8, column=0)
+var9bar = tkinter.IntVar()
+tkinter.Checkbutton(barFrame, text="Percent Meeting Benchmark: Change%", variable=var9bar).grid(row=9, column=0)
+
+barButton = Button(barFrame, text="Show Bar chart")
+barButton.grid(row=10, column=0, pady=10)
+
+
+def getxyvalue(event):
+    if var1bar.get() == 1 and var2bar.get() == 1:
+        x = data['District Number']
+        y = data['Test-takers: 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+
+    elif var1bar.get() == 1 and var3bar.get() == 1:
+        x = data['District Number']
+        y = data['Test-takers: 2013']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+
+    elif var1bar.get() == 1 and var4bar.get() == 1:
+        x = data['District Number']
+        y = data['Test-takers: Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var1bar.get() == 1 and var5bar.get() == 1:
+        x = data['District Number']
+        y = data['Participation Rate (estimate): 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var1bar.get() == 1 and var6bar.get() == 1:
+        x = data['District Number']
+        y = data['Participation Rate (estimate): 2013']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var1bar.get() == 1 and var7bar.get() == 1:
+        x = data['District Number']
+        y = data['Participation Rate (estimate): Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var1bar.get() == 1 and var8bar.get() == 1:
+        x = data['District Number']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var1bar.get() == 1 and var9bar.get() == 1:
+        x = data['District Number']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var2bar.get() == 1 and var3bar.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Test-takers: 2013']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var2bar.get() == 1 and var4bar.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Test-takers: Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var2bar.get() == 1 and var5bar.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Participation Rate (estimate): 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var2bar.get() == 1 and var6bar.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Participation Rate (estimate): 2013']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var2bar.get() == 1 and var7bar.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Participation Rate (estimate): Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var2bar.get() == 1 and var8bar.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var2bar.get() == 1 and var9bar.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var3bar.get() == 1 and var4bar.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Test-takers: Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var3bar.get() == 1 and var5bar.get() == 1:
+        x = data['Test-takers: 2013']
+        y = data['Participation Rate (estimate): 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var3bar.get() == 1 and var6bar.get() == 1:
+        x = data['Test-takers: 2013']
+        y = data['Participation Rate (estimate): 2013']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var3bar.get() == 1 and var7bar.get() == 1:
+        x = data['Test-takers: 2013']
+        y = data['Participation Rate (estimate): Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var3bar.get() == 1 and var8bar.get() == 1:
+        x = data['Test-takers: 2013']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var3bar.get() == 1 and var9bar.get() == 1:
+        x = data['Test-takers: 2013']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var4bar.get() == 1 and var5bar.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Participation Rate (estimate): 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var4bar.get() == 1 and var6bar.get() == 1:
+        x = data['Test-takers: Change%']
+        y = data['Participation Rate (estimate): 2013']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var4bar.get() == 1 and var7bar.get() == 1:
+        x = data['Test-takers: Change%']
+        y = data['Participation Rate (estimate): Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var4bar.get() == 1 and var8bar.get() == 1:
+        x = data['Test-takers: Change%']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var4bar.get() == 1 and var9bar.get() == 1:
+        x = data['Test-takers: Change%']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var5bar.get() == 1 and var6bar.get() == 1:
+        x = data['Participation Rate (estimate): 2012']
+        y = data['Participation Rate (estimate): 2013']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var5bar.get() == 1 and var7bar.get() == 1:
+        x = data['Participation Rate (estimate): 2012']
+        y = data['Participation Rate (estimate): Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var5bar.get() == 1 and var8bar.get() == 1:
+        x = data['Participation Rate (estimate): 2012']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var5bar.get() == 1 and var9bar.get() == 1:
+        x = data['Participation Rate (estimate): 2012']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var6bar.get() == 1 and var7bar.get() == 1:
+        x = data['Participation Rate (estimate): 2013']
+        y = data['Participation Rate (estimate): Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var6bar.get() == 1 and var8bar.get() == 1:
+        x = data['Participation Rate (estimate): 2013']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var6bar.get() == 1 and var9bar.get() == 1:
+        x = data['Participation Rate (estimate): 2013']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var7bar.get() == 1 and var8bar.get() == 1:
+        x = data['Participation Rate (estimate): Change%']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var8bar.get() == 1 and var9bar.get() == 1:
+        x = data['Percent Meeting Benchmark: 2012']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+
+
+barButton.bind("<Button-1>", getxyvalue)
+#scatter frame######################################################
+scatterFrame = Frame(window)
+scatterFrame.columnconfigure(0, weight=1)
+scatterFrame.rowconfigure(0, weight=1)
+varsLabel = Label(scatterFrame, text="Choose Two Column From  Below :\n")\
+            .grid(row=0, sticky=(E, N))
+
+
+var1 = tkinter.IntVar()
+tkinter.Checkbutton(scatterFrame, text="District Number", variable=var1).grid(row=1,column=0)
+var2 = tkinter.IntVar()
+tkinter.Checkbutton(scatterFrame, text="Test-takers: 2012", variable=var2).grid(row=2,column=0)
+var3 = tkinter.IntVar()
+tkinter.Checkbutton(scatterFrame, text="Test-takers: 2013", variable=var3).grid(row=3,column=0)
+var4 = tkinter.IntVar()
+tkinter.Checkbutton(scatterFrame, text="Test-takers: Change%", variable=var4).grid(row=4,column=0)
+var5 = tkinter.IntVar()
+tkinter.Checkbutton(scatterFrame, text="Participation Rate (estimate): 2012", variable=var5).grid(row=5,column=0)
+var6 = tkinter.IntVar()
+tkinter.Checkbutton(scatterFrame, text="Participation Rate (estimate): 2013", variable=var6).grid(row=6,column=0)
+var7 = tkinter.IntVar()
+tkinter.Checkbutton(scatterFrame, text="Participation Rate (estimate): Change%", variable=var7).grid(row=7,column=0)
+var8 = tkinter.IntVar()
+tkinter.Checkbutton(scatterFrame, text="Percent Meeting Benchmark: 2012", variable=var8).grid(row=8, column=0)
+var9 = tkinter.IntVar()
+tkinter.Checkbutton(scatterFrame, text="Percent Meeting Benchmark: Change%", variable=var9).grid(row=9, column=0)
+
+scatterButton = Button(scatterFrame, text="Show Scatter plot")
+scatterButton.grid(row=10, column=0, pady=10)
+
+
+def showGraphScotter(event):
+    if var1.get() == 1 and var2.get() == 1:
+        x = data['District Number']
+        y = data['Test-takers: 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var1.get() == 1 and var3.get() == 1:
+        x = data['District Number']
+        y = data['Test-takers: 2013']
+        plt.scatter(x, y)
+        plt.show()
+    elif var1.get() == 1 and var4.get() == 1:
+        x = data['District Number']
+        y = data['Test-takers: Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var1.get() == 1 and var5.get() == 1:
+        x = data['District Number']
+        y = data['Participation Rate (estimate): 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var1.get() == 1 and var6.get() == 1:
+        x = data['District Number']
+        y = data['Participation Rate (estimate): 2013']
+        plt.scatter(x, y)
+        plt.show()
+    elif var1.get() == 1 and var7.get() == 1:
+        x = data['District Number']
+        y = data['Participation Rate (estimate): Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var1.get() == 1 and var8.get() == 1:
+        x = data['District Number']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var1.get() == 1 and var9.get() == 1:
+        x = data['District Number']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var2.get() == 1 and var3.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Test-takers: 2013']
+        plt.scatter(x, y)
+        plt.show()
+    elif var2.get() == 1 and var4.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Test-takers: Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var2.get() == 1 and var5.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Participation Rate (estimate): 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var2.get() == 1 and var6.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Participation Rate (estimate): 2013']
+        plt.scatter(x, y)
+        plt.show()
+    elif var2.get() == 1 and var7.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Participation Rate (estimate): Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var2.get() == 1 and var8.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var2.get() == 1 and var9.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var3.get() == 1 and var4.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Test-takers: Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var3.get() == 1 and var5.get() == 1:
+        x = data['Test-takers: 2013']
+        y = data['Participation Rate (estimate): 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var3.get() == 1 and var6.get() == 1:
+        x = data['Test-takers: 2013']
+        y = data['Participation Rate (estimate): 2013']
+        plt.scatter(x, y)
+        plt.show()
+    elif var3.get() == 1 and var7.get() == 1:
+        x = data['Test-takers: 2013']
+        y = data['Participation Rate (estimate): Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var3.get() == 1 and var8.get() == 1:
+        x = data['Test-takers: 2013']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var3.get() == 1 and var9.get() == 1:
+        x = data['Test-takers: 2013']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var4.get() == 1 and var5.get() == 1:
+        x = data['Test-takers: 2012']
+        y = data['Participation Rate (estimate): 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var4.get() == 1 and var6.get() == 1:
+        x = data['Test-takers: Change%']
+        y = data['Participation Rate (estimate): 2013']
+        plt.scatter(x, y)
+        plt.show()
+    elif var4.get() == 1 and var7.get() == 1:
+        x = data['Test-takers: Change%']
+        y = data['Participation Rate (estimate): Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var4.get() == 1 and var8.get() == 1:
+        x = data['Test-takers: Change%']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var4.get() == 1 and var9.get() == 1:
+        x = data['Test-takers: Change%']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var5.get() == 1 and var6.get() == 1:
+        x = data['Participation Rate (estimate): 2012']
+        y = data['Participation Rate (estimate): 2013']
+        plt.scatter(x, y)
+        plt.show()
+    elif var5.get() == 1 and var7.get() == 1:
+        x = data['Participation Rate (estimate): 2012']
+        y = data['Participation Rate (estimate): Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var5.get() == 1 and var8.get() == 1:
+        x = data['Participation Rate (estimate): 2012']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var5.get() == 1 and var9.get() == 1:
+        x = data['Participation Rate (estimate): 2012']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var6.get() == 1 and var7.get() == 1:
+        x = data['Participation Rate (estimate): 2013']
+        y = data['Participation Rate (estimate): Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var6.get() == 1 and var8.get() == 1:
+        x = data['Participation Rate (estimate): 2013']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.scatter(x, y)
+        plt.show()
+    elif var6.get() == 1 and var9.get() == 1:
+        x = data['Participation Rate (estimate): 2013']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.scatter(x, y)
+        plt.show()
+    elif var7.get() == 1 and var8.get() == 1:
+        x = data['Participation Rate (estimate): Change%']
+        y = data['Percent Meeting Benchmark: 2012']
+        plt.bar(x, y, color='blue', label=' yasmina')
+        plt.legend(facecolor='gray', shadow='True', loc=5, title='the title')
+        plt.show()
+    elif var8.get() == 1 and var9.get() == 1:
+        x = data['Percent Meeting Benchmark: 2012']
+        y = data['Percent Meeting Benchmark: Change%']
+        plt.scatter(x, y)
+        plt.show()
+
+scatterButton.bind("<Button-1>", showGraphScotter)
+
+
+#main Frame###########################################################<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+mainFrame = Frame(window)
+mainFrame.columnconfigure(0, weight=1)
+mainFrame.rowconfigure(0, weight=1)
+mainFrame.grid(column=1, row=0, sticky=(N, W, E, S))
+
+
+
+#opening frames#####################################################################################
+#open  correlation frame#############################
+def showCorrFrame():
+    closeFrames()
+    corrFrame.grid(column=2, row=0, sticky=(N, W, E, S), padx=100)
+    global openFrame
+    openFrame = 1
+#open regression frame##############################
+def showRegFrame():
+    closeFrames()
+    regFrame.grid(column=2, row=0, sticky=(N, W, E, S), padx=100)
+    global openFrame
+    openFrame = 2
+###################################################
+def showMeanFrame():
+    closeFrames()
+    MeanFrame.grid(column=2, row=0, sticky=(N, W, E, S), padx=100)
+    global openFrame
+    openFrame = 3
+# open madiun frame################################
+def showMadiunFrame():
+    closeFrames()
+    MedianFrame.grid(column=2, row=0, sticky=(N, W, E, S), padx=100)
+    global openFrame
+    openFrame = 4
+# open MODE frame##############################################
+def showModeFrame():
+    closeFrames()
+    ModeFrame.grid(column=2, row=0, sticky=(N, W, E, S), padx=100)
+    global openFrame
+    openFrame = 5
+# open STD frame##############################################
+def showStdFrame():
+    closeFrames()
+    StdFrame.grid(column=2, row=0, sticky=(N, W, E, S), padx=100)
+    global openFrame
+    openFrame = 6
+# open VAR frame##############################################
+def showVarFrame():
+    closeFrames()
+    VarFrame.grid(column=2, row=0, sticky=(N, W, E, S), padx=100)
+    global openFrame
+    openFrame = 7
+
+# open SCATTER frame##############################################
+def showBarFrame():
+    closeFrames()
+    barFrame.grid(column=2, row=0, sticky=(N, W, E, S), padx=100)
+    global openFrame
+    openFrame = 8
+
+# open DOT frame##############################################
+def showScatterFrame():
+    closeFrames()
+    scatterFrame.grid(column=2, row=0, sticky=(N, W, E, S), padx=100)
+    global openFrame
+    openFrame = 9
+#open range frame############################################
+def showRangeFrame():
+    closeFrames()
+    rangeFrame.grid(column=2, row=0, sticky=(N, W, E, S), padx=100)
+    global openFrame
+    openFrame = 10
+
+
+
+#DrawPieChart
+def showPie():
+    labels = data['School']
+    sizes = data['Test-takers: 2012']
+    colors = ["#E13F29", "#D69A80", "#D63B59", "#AE5552", "#CB5C3B", "#EB8076", "#96624E", "#d62728", "#8c564b"]
+    explode = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    plt.pie(sizes, explode=explode, labels=labels,colors=colors,autopct='%1.1f%%', shadow=True, startangle=140)
+    plt.axis('equal')
+    plt.show()
+
+
+##########################################################
+#choiceWhitchColumns
+def checkWhichcol():
+    global df
+    if var1.get() == 1 or var1med.get() == 1 or var1mean.get() == 1:
+        df = data['District Number']
+    elif var2.get() == 1 or var2med.get() == 1 or var2mean.get() == 1:
+        df = data['Test-takers: 2012']
+    elif var3.get() == 1 or var3med.get() == 1 or var3mean.get() == 1:
+        df = data['Test-takers: 2013']
+    elif var4.get() == 1 or var4med.get() == 1 or var4mean.get() == 1:
+        df = data['Test-takers: Change%']
+    elif var5.get() == 1 or var5med.get() == 1 or var5mean.get() == 1:
+        df = data['Participation Rate (estimate): 2012']
+    elif var6.get() == 1 or var6med.get() == 1 or var6mean.get() == 1:
+        df = data['Participation Rate (estimate): 2013']
+    elif var7.get() == 1 or var7med.get() == 1 or var7mean.get() == 1:
+        df = data['Participation Rate (estimate): Change%']
+    elif var8.get() == 1 or var8med.get() == 1 or var8mean.get() == 1:
+        df = data['Percent Meeting Benchmark: 2012']
+    elif var9.get() == 1 or var9med.get() == 1 or var9mean.get() == 1:
+        df = data['Percent Meeting Benchmark: Change%']
+    else:
+        if openFrame == 3:
+            labelerror = Label(MeanFrame, text="Choose column").grid()
+        elif openFrame == 4:
+            labelerror = Label(MedianFrame, text="Choose column").grid()
+
+    return df
+############################################Mode########################################
+
+regButton = Button(mainFrame, text="Regression",command=showRegFrame,bg='#8EAF0C',width=15,height=1).grid(row=1)
+corrButton = Button(mainFrame, text="Correlation",command=showCorrFrame,bg='#8EAF0C',width=15,height=1).grid(row=2)
+showPieButton = Button(mainFrame, text="Pie Chart", command=showPie,bg='#8EAF0C',width=15,height=1).grid(row=3)
+showbuttonstd = Button(mainFrame, text="Standard deviation",command=showStdFrame,bg='#8EAF0C',width=15,height=1).grid(row=4)
+showbuttonvar = Button(mainFrame,text="Variance",command=showVarFrame,bg='#8EAF0C',width=15,height=1).grid(row=5)
+buttonShowMean = Button(mainFrame,text="Mean",command=showMeanFrame,bg='#8EAF0C',width=15, height=1).grid(row=6)
+buttonShowMode = Button(mainFrame, text = "Mode", command=showModeFrame,bg='#8EAF0C',width=15,height=1).grid(row=7)
+buttonShowMadiun = Button(mainFrame, text = "Median", command=showMadiunFrame,bg='#8EAF0C',width=15,height=1).grid(row=8)
+buttonShowGraph = Button(mainFrame, text = "Bar chart", command=showBarFrame,bg='#8EAF0C',width=15,height=1).grid(row=9)
+buttonShowScatter = Button(mainFrame, text = "scatter plot", command=showScatterFrame,bg='#8EAF0C',width=15,height=1).grid(row=10)
+buttonRange = Button(mainFrame, text="Range & IQR", command=showRangeFrame,bg='#8EAF0C',width=15,height=1).grid(row=11)
+
+window.config(bg='#4A586E')
+window.geometry('500x700')
+window.mainloop()
+
